@@ -38,10 +38,6 @@ func GetFoods() gin.HandlerFunc {
 		startIndex := (page - 1) * recordedPerPage
 		startIndex, err = strconv.Atoi(c.Query("startIndex"))
 
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "An Error Occurred"})
-		}
-
 		matchStage := bson.D{{"$match", bson.D{{}}}}
 		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
 		projectStage := bson.D{

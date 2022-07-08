@@ -30,8 +30,8 @@ func GetUsers() gin.HandlerFunc {
 			recordPerPage = 10
 		}
 
-		page, err1 := strconv.Atoi(c.Query("page"))
-		if err1 != nil || page < 1 {
+		page, err := strconv.Atoi(c.Query("page"))
+		if err != nil || page < 1 {
 			page = 1
 		}
 
@@ -39,23 +39,26 @@ func GetUsers() gin.HandlerFunc {
 		startIndex, err = strconv.Atoi(c.Query("startIndex"))
 
 		matchStage := bson.D{{"$match", bson.D{{}}}}
+		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
 		projectStage := bson.D{
-			{"$project", bson.D{
-				{"_id", 0},
-				{"total_count", 1},
-				{"user_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},
-			}}}
+			{
+				"$project", bson.D{
+					{"_id", 0},
+					{"total_count", 1},
+					{"user_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},
+				}}}
 
 		result, err := userCollection.Aggregate(ctx, mongo.Pipeline{
-			matchStage, projectStage})
+			matchStage, groupStage, projectStage})
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing user items"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing user items"})
 		}
 
 		var allUsers []bson.M
 		if err = result.All(ctx, &allUsers); err != nil {
-			log.Fatal(err.Error())
+			log.Fatal(err)
+
 		}
 		c.JSON(http.StatusOK, allUsers[0])
 
@@ -73,7 +76,7 @@ func GetUser() gin.HandlerFunc {
 
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing user items"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing user items"})
 		}
 		c.JSON(http.StatusOK, user)
 	}
@@ -108,8 +111,8 @@ func SignUp() gin.HandlerFunc {
 		}
 		//hash password
 
-		password := HashPassword(*user.Password)
-		user.Password = &password
+		// password := HashPassword(*user.Password)
+		// user.Password = &password
 
 		//you'll also check if the phone no. has already been used by another user
 

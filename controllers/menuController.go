@@ -59,11 +59,14 @@ func CreateMenu() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
 		validationErr := validate.Struct(menu)
 		if validationErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": validationErr.Error()})
 			return
 		}
+
+
 		menu.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		menu.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		menu.ID = primitive.NewObjectID()
@@ -76,6 +79,7 @@ func CreateMenu() gin.HandlerFunc {
 		}
 		defer cancel()
 		c.JSON(http.StatusOK, result)
+		defer cancel()
 	}
 }
 
@@ -120,7 +124,9 @@ func UpdateMenu() gin.HandlerFunc {
 			result, err := menuCollection.UpdateOne(
 				ctx,
 				filter,
-				bson.E{"$set", updateObj},
+				bson.D{
+					{"$set", updateObj},
+				},
 				&opt,
 			)
 			if err != nil {

@@ -2,8 +2,8 @@ package main
 
 import (
 	"go-restaurant/database"
-	"go-restaurant/middleware"
-	"go-restaurant/routers"
+	middleware "go-restaurant/middleware"
+	routers "go-restaurant/routers"
 	"os"
 
 	"github.com/gin-gonic/gin"
